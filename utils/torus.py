@@ -2,6 +2,10 @@ import numpy as np
 import tqdm
 import os
 
+TORUS_CACHE_DIR = os.getenv('DIFFDOCK_TORUS_CACHE_DIR')
+TORUS_CACHE_DIR = TORUS_CACHE_DIR + '/' if TORUS_CACHE_DIR else ''
+
+
 """
     Preprocessing for the SO(2)/torus sampling and score computations, truncated infinite series are computed and then
     cached to memory, therefore the precomputation is only run the first time the repository is run on a machine
@@ -28,16 +32,16 @@ SIGMA_MIN, SIGMA_MAX, SIGMA_N = 3e-3, 2, 5000  # relative to pi
 x = 10 ** np.linspace(np.log10(X_MIN), 0, X_N + 1) * np.pi
 sigma = 10 ** np.linspace(np.log10(SIGMA_MIN), np.log10(SIGMA_MAX), SIGMA_N + 1) * np.pi
 
-if os.path.exists('.p.npy'):
-    p_ = np.load('.p.npy')
-    score_ = np.load('.score.npy')
+if os.path.exists(TORUS_CACHE_DIR + '.p.npy'):
+    p_ = np.load(TORUS_CACHE_DIR + '.p.npy')
+    score_ = np.load(TORUS_CACHE_DIR + '.score.npy')
 else:
     p_ = p(x, sigma[:, None], N=100)
-    np.save('.p.npy', p_)
+    np.save(TORUS_CACHE_DIR + '.p.npy', p_)
 
     eps = np.finfo(p_.dtype).eps
     score_ = grad(x, sigma[:, None], N=100) / (p_ + eps)
-    np.save('.score.npy', score_)
+    np.save(TORUS_CACHE_DIR + '.score.npy', score_)
 
 
 def score(x, sigma):
